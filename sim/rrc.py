@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import common
 
-RRC_FILTER_GAIN = 2
+RRC_FILTER_GAIN = 1
 RRC_FILTER_NUM_SYMBOLS = 6
 
 

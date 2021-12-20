@@ -6,7 +6,7 @@ phase_multiplier = np.pi / 4
 # hz
 symbol_rate = 1
 symbol_period = 1 / symbol_rate
-oversample_rate = 10
+oversample_rate = 5
 
 sample_rate = symbol_rate * oversample_rate
 
