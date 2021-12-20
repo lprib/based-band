@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 
 import common
 
-RRC_FILTER_GAIN = 4
+RRC_FILTER_GAIN = 2
 RRC_FILTER_NUM_SYMBOLS = 6
 
 
@@ -47,7 +47,6 @@ def post_process_response(resp):
 RRC_IMPULSE_RESPONSE = post_process_response(get_rrc_impulse(0.75, RRC_FILTER_NUM_SYMBOLS))
 
 if __name__ == "__main__":
-    sample_rate = common.symbol_rate * common.oversample_rate
     num_symbols = RRC_FILTER_NUM_SYMBOLS
     fig, ((ax0, ax1), (ax2, ax3)) = plt.subplots(2, 2)
     fig.suptitle(f"RRC pulse shaping, oversample_rate={common.oversample_rate}, filter_spread_symbols={num_symbols}, filter_gain={RRC_FILTER_GAIN}")
@@ -58,12 +57,12 @@ if __name__ == "__main__":
         resp_2 = common.quantize(np.convolve(resp, resp))
 
         ax0.set_title("single RRC impulse")
-        ax0.plot(common.get_t(resp, sample_rate), resp, label=f"beta = {beta}")
+        ax0.plot(common.get_t(resp), resp, label=f"beta = {beta}")
 
         ax1.set_title("matched filter RC impulse")
-        ax1.plot(common.get_t(resp_2, sample_rate), resp_2, label=f"beta = {beta}")
+        ax1.plot(common.get_t(resp_2), resp_2, label=f"beta = {beta}")
 
-        w, h = signal.freqz(resp, fs=sample_rate)
+        w, h = signal.freqz(resp, fs=common.sample_rate)
 
         ax2.set_title("matched filter magnitude, dB")
         ax2.plot(w, 20*np.log10(np.absolute(h)), label=f"mag, beta = {beta}")

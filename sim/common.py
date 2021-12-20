@@ -8,6 +8,8 @@ symbol_rate = 1
 symbol_period = 1 / symbol_rate
 oversample_rate = 10
 
+sample_rate = symbol_rate * oversample_rate
+
 # Q7 fixed point
 fixed_point_mult = 2**7
 
@@ -20,7 +22,7 @@ def to_fixed(n):
 def from_fixed(n):
     return n / fixed_point_mult
 
-def get_t(n, sample_rate):
+def get_t(n, sample_rate=sample_rate):
     return np.arange(len(n)) / sample_rate
 
 def as_c_string(n):
