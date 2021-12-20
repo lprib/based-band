@@ -4,11 +4,15 @@ symbols = np.array([-1, -3, 1, 3])
 phase_multiplier = np.pi / 4
 
 # hz
-symbol_rate = 1
+max_frequency_dev = 300
+
+# hz
+symbol_rate = 100
 symbol_period = 1 / symbol_rate
-oversample_rate = 5
+oversample_rate = 8
 
 sample_rate = symbol_rate * oversample_rate
+sample_period = 1 / sample_rate
 
 # Q7 fixed point
 fixed_point_mult = 2**7

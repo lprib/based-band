@@ -5,8 +5,12 @@ import matplotlib.pyplot as plt
 
 import common
 
+# RRC_FILTER_GAIN = 1
+# RRC_FILTER_NUM_SYMBOLS = 6
+
+RRC_FILTER_BETA = 0.75
 RRC_FILTER_GAIN = 1
-RRC_FILTER_NUM_SYMBOLS = 6
+RRC_FILTER_NUM_SYMBOLS = 4
 
 
 def rrc_equation(t, beta):
@@ -44,7 +48,7 @@ def post_process_response(resp):
     return common.quantize(RRC_FILTER_GAIN * resp / np.sum(resp))
 
 # final filter
-RRC_IMPULSE_RESPONSE = post_process_response(get_rrc_impulse(0.75, RRC_FILTER_NUM_SYMBOLS))
+RRC_IMPULSE_RESPONSE = post_process_response(get_rrc_impulse(RRC_FILTER_BETA, RRC_FILTER_NUM_SYMBOLS))
 
 if __name__ == "__main__":
     num_symbols = RRC_FILTER_NUM_SYMBOLS
