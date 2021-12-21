@@ -1,15 +1,19 @@
 import numpy as np
 
-symbols = np.array([-1, -3, 1, 3])
+symbols = np.array([1, 3, -1, -3])
 phase_multiplier = np.pi / 4
 
+sync_pattern_dibits_half = np.array([1, 3, 1, 3, 1, 1, 3, 3, 1, 3, 1, 3, 3, 3, 3, 1, 1])
+# sync_pattern_dibits = sync_pattern_dibits_half
+sync_pattern_dibits = np.concatenate((sync_pattern_dibits_half, [3], np.flip(sync_pattern_dibits_half)))
+
 # hz
-max_frequency_dev = 300
+max_frequency_dev = 500
 
 # hz
 symbol_rate = 100
 symbol_period = 1 / symbol_rate
-oversample_rate = 8
+oversample_rate = 10
 
 sample_rate = symbol_rate * oversample_rate
 sample_period = 1 / sample_rate
@@ -19,6 +23,9 @@ fixed_point_mult = 2**7
 
 def quantize(n):
     return np.around(n * fixed_point_mult) / fixed_point_mult
+
+def clip(n):
+    return np.clip(n, -1, 1)
 
 def to_fixed(n):
     return np.around(n * fixed_point_mult)
