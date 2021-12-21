@@ -3,12 +3,12 @@ import numpy as np
 symbols = np.array([1, 3, -1, -3])
 phase_multiplier = np.pi / 4
 
-sync_pattern_dibits_half = np.array([1, 3, 1, 3, 1, 1, 3, 3, 1, 3, 1, 3, 3, 3, 3, 1, 1])
+sync_pattern_dibits_half = np.array([1, 3, 1, 1, 3, 1, 3, 1, 3, 3, 3, 1])
 # sync_pattern_dibits = sync_pattern_dibits_half
-sync_pattern_dibits = np.concatenate((sync_pattern_dibits_half, [3], np.flip(sync_pattern_dibits_half)))
+sync_pattern_dibits = np.concatenate((sync_pattern_dibits_half, np.flip(sync_pattern_dibits_half)))
 
 # hz
-max_frequency_dev = 500
+max_frequency_dev = 400
 
 # hz
 symbol_rate = 100

@@ -75,7 +75,7 @@ def plot_sync_test():
     # s = cf.apply_cf(modulated)
     
     corr = np.convolve(s, get_sync_taps())
-    corr_mag = np.real(np.absolute(corr))
+    corr_mag = np.square(np.real(np.absolute(corr)))
     plt.plot(corr_mag)
 
     plt.show()
@@ -112,4 +112,5 @@ def plot_bb():
     plt.show()
 
 if __name__ == "__main__":
+    # plot_sync()
     plot_sync_test()
