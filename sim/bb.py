@@ -1,4 +1,5 @@
 import numpy as np
+from scipy import signal
 import matplotlib.pyplot as plt
 
 import common
@@ -54,7 +55,13 @@ def plot_sync():
     pattern = get_sync_taps()
     plt.figure()
     plt.plot(np.angle(pattern))
-    plt.show()
+
+def plot_psd():
+    pattern = random_dibits(1000)
+    modulated = cf.apply_cf(phase_mod(pulse_shape(pattern)))
+    f, pxx = signal.periodogram(modulated, fs=common.sample_rate)
+    plt.figure()
+    plt.plot(f, pxx)
 
 def plot_sync_test():
     np.random.seed(0)
@@ -77,8 +84,6 @@ def plot_sync_test():
     corr = np.convolve(s, get_sync_taps())
     corr_mag = np.square(np.real(np.absolute(corr)))
     plt.plot(corr_mag)
-
-    plt.show()
 
 def plot_bb():
     np.random.seed(0)
@@ -109,8 +114,9 @@ def plot_bb():
 
     plt.legend()
     plt.tight_layout()
-    plt.show()
 
 if __name__ == "__main__":
     # plot_sync()
-    plot_sync_test()
+    # plot_sync_test()
+    plot_psd()
+    plt.show()
