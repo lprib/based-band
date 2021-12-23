@@ -60,12 +60,12 @@ def get_random_passband_signal(carrier_freq):
 
 def write_passband_wav():
     # simulate multiple channels:
-    # mod = get_random_passband_signal(1000)
-    # for i in np.arange(1500, 5000, 500):
-    #     mod = mod + get_random_passband_signal(i)
+    mod = get_random_passband_signal(1000)
+    for i in np.arange(1500, 5000, 500):
+        mod = mod + get_random_passband_signal(i)
 
     # single channel
-    mod = get_random_passband_signal(1000)
+    # mod = get_random_passband_signal(500)
 
     mod = mod / np.max(np.absolute(mod))
 
@@ -94,7 +94,7 @@ def plot_psd():
     plt.figure()
 
     carrier_freq = 12000
-    interference_freq = 12400
+    interference_freq = 13000
 
     pattern = bb.random_dibits(1000)
     baseband = bb.phase_mod(bb.pulse_shape(pattern))
@@ -131,7 +131,7 @@ def plot_psd():
 
 
 if __name__ == "__main__":
-    # plot_psd()
+    plot_psd()
     # plot_mod_demod()
     # plot_upsampled_psd()
     # plt.show()

@@ -43,12 +43,7 @@ def get_sync_taps():
 
 def phase_demod(samples):
     diff = np.diff(np.angle(samples))
-    # handle angle roll-over
-    for i in range(len(diff)):
-        if diff[i] > np.pi:
-            diff[i] -= 2*np.pi
-        if diff[i] < -np.pi:
-            diff[i] += 2*np.pi
+    diff = np.unwrap(diff)
     return diff
 
 def plot_sync():
