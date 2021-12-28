@@ -160,8 +160,8 @@ def plot_psd():
     t3 = common.get_t(tx_pulse_shape)
     t4 = common.get_t(rx_pulse_shape)
     ax2.set_title("Modulated then demodulated (pulse)")
-    ax2.plot(t3, tx_pulse_shape, label="transmitted baseband pulse")
-    ax2.plot(t4, rx_pulse_shape, label="received baseband pulse")
+    ax2.plot(t3, tx_pulse_shape, "o-", label="transmitted baseband pulse")
+    ax2.plot(t4, rx_pulse_shape, "o-", label="received baseband pulse")
     ax2.vlines(delayed_tx_sample_instants, -1, 1, label="sampling instants")
     ax2.legend()
 
