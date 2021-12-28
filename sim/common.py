@@ -8,10 +8,10 @@ sync_pattern_dibits_half = np.array([1, 3, 1, 1, 3, 1, 3, 1, 3, 3, 3, 1])
 sync_pattern_dibits = np.concatenate((sync_pattern_dibits_half, np.flip(sync_pattern_dibits_half)))
 
 # hz
-max_frequency_dev = 400
+max_frequency_dev = 600
 
 # hz
-symbol_rate = 100
+symbol_rate = 200
 symbol_period = 1 / symbol_rate
 oversample_rate = 10
 

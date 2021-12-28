@@ -6,13 +6,15 @@ import matplotlib.pyplot as plt
 import common
 import cf
 import bb
+import rrc
 
 PASSBAND_FS = 40000
 
 BB_INTERPOLATION_TAPS = 128
 BB_INTERPOLATION_IMPULSE_RESPONSE = signal.firwin(BB_INTERPOLATION_TAPS, cf.CF_CUTOFF, fs=PASSBAND_FS, scale=True)
 
-UPSAMPLED_CF_CUTOFF = cf.CF_CUTOFF
+# TODO adjust this.... also the baseband CF isn't needed if we have this (?)
+UPSAMPLED_CF_CUTOFF = 800
 UPSAMPLED_CF_TAPS = 128
 UPSAMPLED_CF_IMPULSE_RESPONSE = signal.firwin(UPSAMPLED_CF_TAPS, UPSAMPLED_CF_CUTOFF, fs=PASSBAND_FS, scale=True)
 
@@ -89,22 +91,40 @@ def plot_upsampled_psd():
     plt.plot(bb_f, bb_pxx)
     plt.plot(upsample_f, upsample_pxx, alpha=0.5)
 
-
 def plot_psd():
     plt.figure()
 
     carrier_freq = 12000
-    interference_freq = 13000
+    interference_freq = 13600
+    awgn_power = 0.0
+
+    # Delays
+    # group delay of the baseband->passband interpolation filter
+    interp_filter_delay_s = (BB_INTERPOLATION_TAPS + 1) / (2 * PASSBAND_FS)
+    # group delay of the passband channel filter
+    mod_demod_delay_s = (UPSAMPLED_CF_TAPS + 1) / (2 * PASSBAND_FS)
+    # group delay of the pulse shaping filter (full signal passes through this twice, matched filter)
+    pulse_shape_delay_s = (len(rrc.RRC_IMPULSE_RESPONSE) + 1) / (2 * common.sample_rate)
+    # total incurred delay between transmit and recieve
+    total_incurred_delay_s = interp_filter_delay_s + mod_demod_delay_s + pulse_shape_delay_s
+    # number of baseband samples of the total incurred delay
+    # This is used to disable baseband phase demod until the samples are actually ariving.
+    # Otherwise it would attempt to demod noise, which will through the phase completely out of wack
+    total_incurred_delay_bb_samples = int(np.ceil(total_incurred_delay_s / common.sample_period))
 
     pattern = bb.random_dibits(1000)
-    baseband = bb.phase_mod(bb.pulse_shape(pattern))
+    tx_pulse_shape = bb.pulse_shape(pattern)
+    tx_sample_instants = bb.get_sampling_instants(pattern)
+    baseband = bb.phase_mod(tx_pulse_shape)
     passband_modulated = modulate(carrier_freq, baseband)
 
     interference_pattern = bb.random_dibits(1000)
     interference_baseband = bb.phase_mod(bb.pulse_shape(interference_pattern))
     interference_passband_modulated = modulate(interference_freq, interference_baseband)
 
-    full_passband = passband_modulated + interference_passband_modulated
+    awgn = np.random.normal(0, np.sqrt(awgn_power), len(passband_modulated))
+
+    full_passband = passband_modulated + interference_passband_modulated + awgn
 
     upsampled_demod = demodulate(carrier_freq, full_passband)
 
@@ -116,18 +136,34 @@ def plot_psd():
     plt.plot(demod_f, demod_pxx, label=f"passband demodulated PSD, carrier={carrier_freq}")
     plt.legend()
 
-    plt.figure()
-    plt.title("Modulated then demodulated")
-    demod = downsample_passband(upsampled_demod)
-    interp_filter_delay_s = (BB_INTERPOLATION_TAPS + 1) / (2 * PASSBAND_FS)
-    mod_demod_delay_s = (UPSAMPLED_CF_TAPS + 1) / (2 * PASSBAND_FS)
-    # delay the first time base by the two filters' group delay so the plots line up
-    t1 = common.get_t(baseband) + interp_filter_delay_s + mod_demod_delay_s
-    t2 = common.get_t(demod)
+    demod = downsample_passband(upsampled_demod)[total_incurred_delay_bb_samples:]
+    rx_phase_demod = bb.phase_demod(demod)
+    rx_pulse_shape = np.convolve(rx_phase_demod, rrc.RRC_IMPULSE_RESPONSE)
 
-    print(baseband.shape, demod.shape)
-    plt.plot(t1, np.angle(baseband), label="transmitted baseband phase")
-    plt.plot(t2, np.angle(demod), label="received baseband phase")
+    # delay the first time base by the two filters' group delay so the plots line up
+    t1 = common.get_t(baseband)
+    # we delay this by the pulse shaping filter delay so that it will line up
+    # with the graphs below, which plot signals that have also been through the
+    # RX pulse shaping (PDM filter)
+    t2 = common.get_t(demod) + pulse_shape_delay_s
+
+    _, (ax1, ax2) = plt.subplots(2, sharex=True)
+    ax1.set_title("Modulated then demodulated (phase)")
+    ax1.plot(t1, np.angle(baseband), label="transmitted baseband phase")
+    ax1.plot(t2, np.angle(demod), label="received baseband phase")
+    ax1.legend()
+
+    delayed_tx_sample_instants = tx_sample_instants + total_incurred_delay_s
+    # no need to delay the tx/rx to line up with eachother, size we have
+    # already sliced off the starting samples of the RX so that it doesn't try
+    # to demod noise
+    t3 = common.get_t(tx_pulse_shape)
+    t4 = common.get_t(rx_pulse_shape)
+    ax2.set_title("Modulated then demodulated (pulse)")
+    ax2.plot(t3, tx_pulse_shape, label="transmitted baseband pulse")
+    ax2.plot(t4, rx_pulse_shape, label="received baseband pulse")
+    ax2.vlines(delayed_tx_sample_instants, -1, 1, label="sampling instants")
+    ax2.legend()
 
 
 if __name__ == "__main__":
@@ -135,5 +171,5 @@ if __name__ == "__main__":
     # plot_mod_demod()
     # plot_upsampled_psd()
     # plt.show()
-    write_passband_wav()
+    # write_passband_wav()
     plt.show()

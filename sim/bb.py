@@ -22,16 +22,26 @@ def pulse_shape(dibits):
     return common.quantize(pulse_shaped)
     # phase = symbols * common.phase_multiplier
 
+def get_sampling_instants(dibits):
+    # get list of samping instants (seconds) for an interpolated, pulse-shaped signal
+    # interpolation zero-pads the beginning of the signal
+    interpolate_delay_s = 10 * common.sample_period
+    pulse_shape_delay_s = (len(rrc.RRC_IMPULSE_RESPONSE) + 1) / (2 * common.sample_rate)
+    return np.arange(len(dibits)) * common.symbol_period + interpolate_delay_s + pulse_shape_delay_s
+
 def get_phase(samples):
     freq = samples * common.max_frequency_dev
     phase = np.cumsum(freq) * common.sample_period
     return phase
 
 def phase_mod(samples):
+    """Actually frequency modulation, not phase modulation"""
+    # Convert pulse-shaped symbols into frequency/time series
     freq = samples * common.max_frequency_dev
+    # Phase is the integral (ie. cumsum times period)
     phase = np.cumsum(freq) * common.sample_period
     t = np.arange(len(samples)) * common.sample_period
-    return common.quantize(np.exp(2*np.pi*1j*(t + phase)))
+    return common.quantize(np.exp(2 * np.pi * 1j * (t + phase)))
 
 def get_sync_taps():
     pulse = pulse_shape(common.sync_pattern_dibits)
@@ -83,8 +93,8 @@ def plot_sync_test():
 def plot_bb():
     np.random.seed(0)
     plt.figure()
-    # test_dibits = random_dibits(20)
-    test_dibits = common.sync_pattern_dibits
+    test_dibits = random_dibits(20)
+    # test_dibits = common.sync_pattern_dibits
     tx_interp = zero_interpolate(test_dibits)
 
     # delay in seconds of rrc filter
@@ -94,7 +104,12 @@ def plot_bb():
     plt.plot(common.get_t(tx_interp) + 2 * rrc_filter_len_s, tx_interp, "x-", alpha=0.3, label="zero interp tx")
 
     tx_pulse = pulse_shape(test_dibits)
+    # here we delay by an ADDITIONAL rrc_filter_len_s because we're trying to
+    # line it up with the RX pulse shape which has been through the filter
+    # twice (matched filter)
+    tx_sample_instants = get_sampling_instants(test_dibits) + rrc_filter_len_s
     plt.plot(common.get_t(tx_pulse) + rrc_filter_len_s, tx_pulse, "x-", label="rrc shaped tx")
+    plt.vlines(tx_sample_instants, -1, 1, label="sampling instants")
 
     # tx_phase = phase_mod(tx_pulse)
     phase = phase_mod(tx_pulse)
@@ -113,5 +128,6 @@ def plot_bb():
 if __name__ == "__main__":
     # plot_sync()
     # plot_sync_test()
-    plot_psd()
+    # plot_psd()
+    plot_bb()
     plt.show()
